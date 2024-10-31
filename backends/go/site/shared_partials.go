@@ -1,44 +1,13 @@
 package site
 
 import (
-	"bytes"
-	"compress/gzip"
 	"fmt"
 	"strings"
 
 	"github.com/a-h/templ"
-	"github.com/dustin/go-humanize"
 	"github.com/gomarkdown/markdown"
 	"github.com/gomarkdown/markdown/parser"
 )
-
-var (
-	iifeBuildSize    int
-	iifeBuildSizeStr string
-)
-
-func upsertIIfeBuildSize() string {
-	if iifeBuildSizeStr != "" {
-		return iifeBuildSizeStr
-	}
-	build, err := staticFS.ReadFile("static/library/datastar.iife.js")
-	if err != nil {
-		panic(err)
-	}
-	buf := bytes.NewBuffer(nil)
-	w, err := gzip.NewWriterLevel(buf, gzip.BestCompression)
-	if err != nil {
-		panic(err)
-	}
-
-	if _, err := w.Write(build); err != nil {
-		panic(err)
-	}
-	w.Close()
-	iifeBuildSize = buf.Len()
-	iifeBuildSizeStr = humanize.IBytes(uint64(iifeBuildSize))
-	return iifeBuildSizeStr
-}
 
 func markdownRenders(staticMdPath string) (mdElementRenderers map[string]string, mdAnchors map[string][]string, err error) {
 	mdDir := "static/md/" + staticMdPath
@@ -46,9 +15,6 @@ func markdownRenders(staticMdPath string) (mdElementRenderers map[string]string,
 	if err != nil {
 		return nil, nil, fmt.Errorf("error reading docs dir: %w", err)
 	}
-
-	// regExpImg := regexp.MustCompile(`(?P<whole>!\[[^\]]+]\((?P<path>[^)]+)\))`)
-	// prefix := []byte("/static/")
 
 	mdElementRenderers = map[string]string{}
 	mdAnchors = map[string][]string{}

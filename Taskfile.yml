@@ -20,67 +20,17 @@ tasks:
     cmds:
       - echo {{.VERSION}}
 
-  libpub:
-    dir: packages/library
-    deps:
-      - library
-    cmds:
-      - git push origin
-      - git tag v{{.VERSION}}
-      - git push origin --tags
-      - npm publish --access public
-      - git push --tags
-      - GOPROXY=proxy.golang.org go list -m github.com/delaneyj/datastar@v{{.VERSION}}
-      - task: deploy
-
-  library:
-    vars:
-      BACKEND_STATIC_DIR: "../../backends/go/{{.NAME}}/static/library"
-    dir: packages/library
-    generates:
-      - "dist/**/*"
-    sources:
-      - "src/**/*.ts"
-      - "package.json"
-    cmds:
-      # - echo "{{.BACKEND_STATIC_DIR}}"
-      - pnpm i
-      # - pnpm vitest --watch=false
-      - pnpm prettier -w .
-      - pnpm build
-      - rsync -av dist/ {{.BACKEND_STATIC_DIR}}
-      - rsync -av package.json {{.BACKEND_STATIC_DIR}}
-
-  inspector:
-    library:
-    vars:
-      BACKEND_STATIC_DIR: "../../backends/go/{{.NAME}}/static/inspector"
-    dir: packages/inspector
-    generates:
-      - "dist/**/*"
-    sources:
-      - "src/**/*.ts"
-      - "package.json"
-    cmds:
-      # - echo "{{.BACKEND_STATIC_DIR}}"
-      - pnpm i
-      # - pnpm vitest --watch=false
-      - pnpm prettier -w . --log-level silent
-      - pnpm build
-      - rsync -av dist/ {{.BACKEND_STATIC_DIR}}
-      - rsync -av package.json {{.BACKEND_STATIC_DIR}}
-
   css:
     dir: backends/go/site/css
     generates:
       - "../static/css/site.css"
     sources:
-      - "../**/*.md"
+      # - "../**/*.md"
       # - "../**/*.go"
       - "../**/*.templ"
     cmds:
       - pnpm i
-      - pnpm tailwindcss build -o ../static/css/site.css -w
+      - pnpm tailwindcss build -o ../static/css/site.css
 
   templ:
     env:
@@ -94,13 +44,7 @@ tasks:
 
   kill:
     cmds:
-      - killall -q {{.BIN_NAME}}  || echo "Process was not running."
-
-  tests:
-    dir: playwright
-    cmds:
-      - pnpm i
-      - pnpm playwright
+      - killall -q {{.BIN_NAME}} || echo "Process was not running."
 
   hot:
     desc: Server hot reload
@@ -112,32 +56,14 @@ tasks:
       - "**/*.md"
       - "{{.NAME}}/static/**/*"
     deps:
-      - library
+      - css
       - kill
       - templ
-      # - inspector
-      # - css
 
     cmds:
       - go mod tidy
       - go build -o ./{{.BIN_NAME}} cmd/{{.NAME}}/main.go
       - ./{{.BIN_NAME}}
-
-  test:
-    dir: packages/playwright
-    cmds:
-      - curl -o - -I http://localhost:8080
-      - pnpm i
-      - pnpm playwright install
-      - pnpm playwright test --ui
-
-  deploy:
-    deps:
-      - library
-    cmds:
-      - task: inspector
-      - task: library
-      - fly deploy --local-only
 
   default:
     deps:

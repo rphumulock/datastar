@@ -5,22 +5,32 @@ import (
 	"strings"
 )
 
-templ Page() {
+templ Page(r *http.Request) {
 	<!DOCTYPE html>
-	<html lang="en">
+	<html lang="en" class="h-full overflow-hidden">
 		<head>
-			<title>DATASTAR</title>
+			<title>RPGH</title>
 			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<link rel="icon" href={ staticPath("images/datastar_icon.svg") }/>
+			<!-- Preload and load the site CSS -->
+			<link rel="preload" href={ staticPath("css/site.css") } as="style"/>
 			<link href={ staticPath("css/site.css") } rel="stylesheet" type="text/css"/>
-			<link rel="preconnect" href="https://fonts.googleapis.com"/>
-			<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-			<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@300..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Orbitron:wght@400..900&display=swap" rel="stylesheet"/>
-			<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js"></script>
-			<script type="module" defer src={ staticPath("inspector/datastar-inspector.js") }></script>
-			// <script type="module" defer src={ staticPath("library/datastar.js") }></script>
+			<!-- Preload Google Fonts with correct attributes -->
+			<link
+				rel="preload"
+				href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+				as="font"
+				type="font/woff2"
+				crossorigin="anonymous"
+			/>
+			<link
+				href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
+				rel="stylesheet"
+			/>
+			<!-- Additional scripts -->
+			<script src="https://code.iconify.design/iconify-icon/2.1.0/iconify-icon.min.js" defer></script>
+			<script type="module" defer src="https://cdn.jsdelivr.net/npm/@sudodevnull/datastar"></script>
 		</head>
-		<body class="flex flex-col min-h-screen overflow-y-scroll min-w-screen scrollbar scrollbar-thumb-primary scrollbar-track-accent">
+		<body class="flex flex-col min-h-screen font-press-start">
 			{ children... }
 		</body>
 	</html>
@@ -30,9 +40,25 @@ templ icon(icon string, attrs ...string) {
 	<iconify-icon icon={ icon } { KVPairsAttrs(attrs...)... } noobserver></iconify-icon>
 }
 
-templ headerIconLink(iconName, href string) {
-	<a target="_blank" rel="noopener noreferrer" href={ templ.SafeURL(href) }>
-		@icon(iconName)
+templ headerIconLink(iconName, href string, attrs ...string) {
+	<a
+		target="_blank"
+		rel="noopener noreferrer"
+		href={ templ.SafeURL(href) }
+		class={ "font-bold uppercase link-hover font text-base-content hover:bg-primary" }
+	>
+		@icon(iconName, attrs...)
+	</a>
+}
+
+templ iconLink(iconName string, href string, attrs ...string) {
+	<a
+		target="_blank"
+		rel="noopener noreferrer"
+		href={ templ.SafeURL(href) }
+		class={ "font-bold uppercase link-hover font" }
+	>
+		@icon(iconName, attrs...)
 	</a>
 }
 
@@ -41,7 +67,7 @@ templ headerTopLevelLink(r *http.Request, text string) {
 	<a
 		href={ url }
 		class={
-			"font-bold uppercase link-hover",
+			"font-bold uppercase link-hover font text-base-content hover:bg-primary",
 			templ.KV("link-primary", strings.HasPrefix(r.URL.Path, string(url))),
 		}
 	>
@@ -50,65 +76,34 @@ templ headerTopLevelLink(r *http.Request, text string) {
 }
 
 templ headerExternalLinks() {
-	@headerIconLink("simple-icons:discord", "https://discord.gg/CHvPMrAp6F")
-	@headerIconLink("simple-icons:github", "https://github.com/delaneyj/datastar/tree/main/packages/library")
-	@headerIconLink("simple-icons:npm", "https://www.npmjs.com/package/@sudodevnull/datastar")
-	@headerIconLink("simple-icons:twitter", "https://x.com/DelaneyGillilan")
-	@headerIconLink("simple-icons:reddit", "https://www.reddit.com/r/datastardev/")
+	@headerIconLink("pixelarticons:github-2", "https://github.com/rphumulock", "height", "40", "width", "40")
 }
 
 templ headerTopLevelLinks(r *http.Request) {
-	@headerTopLevelLink(r, "Guide")
-	@headerTopLevelLink(r, "Reference")
-	@headerTopLevelLink(r, "Examples")
-	@headerTopLevelLink(r, "Essays")
-	@headerTopLevelLink(r, "Memes")
+	@headerTopLevelLink(r, "Ramblings")
+	@headerTopLevelLink(r, "Projects")
 }
 
 templ header(r *http.Request) {
-	<div class="navbar bg-base-200">
+	<div class="navbar bg-base-300 px-4 py-2 border-2 border-base-content">
 		<div class="flex justify-between w-full gap-4">
-			<div class="flex items-baseline gap-1">
-				<a
-					class="flex gap-1 text-2xl font-bold uppercase font-brand"
-					href="/"
-				>
-					<span>Datastar</span>
-					<img src={ staticPath("images/datastar_icon.svg") } class="h-8"/>
-				</a>
-				<div class="font-mono text-xs text-accent">v{ packageJSON.Version }</div>
-			</div>
-			<div class="hidden lg:text-md lg:text-lg lg:flex lg:gap-4 lg:visible ">
+			<div class="text-md text-lg flex gap-4">
 				@headerTopLevelLinks(r)
 			</div>
-			<div class="hidden text-xl lg:flex lg:gap-4 lg:visible">
+			<div class="text-xl flex gap-4 visible">
 				@headerExternalLinks()
 			</div>
-		</div>
-	</div>
-	<div class="flex flex-wrap justify-around visible gap-2 pb-8 text-sm bg-base-200 lg:hidden">
-		@headerTopLevelLinks(r)
-	</div>
-	<div class="visible navbar bg-base-300 lg:hidden">
-		<div class="navbar-start">
-			<label for="sidebar-drawer" class="btn btn-ghost drawer-button">
-				@icon("material-symbols:menu")
-			</label>
-		</div>
-		<div class="gap-4 navbar-end">
-			@headerExternalLinks()
 		</div>
 	</div>
 }
 
 type SidebarLink struct {
-	ID                     string
-	Label                  string
-	URL                    templ.SafeURL
-	Prev                   *SidebarLink
-	Next                   *SidebarLink
-	IsDisabled             bool
-	ShouldIncludeInspector bool
+	ID         string
+	Label      string
+	URL        templ.SafeURL
+	Prev       *SidebarLink
+	Next       *SidebarLink
+	IsDisabled bool
 }
 
 type SidebarGroup struct {
@@ -117,33 +112,35 @@ type SidebarGroup struct {
 }
 
 templ SidebarPage(r *http.Request, sidebarGroups []*SidebarGroup, current *SidebarLink, contents string) {
-	@Page() {
+	@Page(r) {
 		@highlightCSS
 		<div class="drawer">
 			<input id="sidebar-drawer" type="checkbox" class="drawer-toggle"/>
 			<div class="flex flex-col min-h-screen drawer-content">
 				@header(r)
-				if current.ShouldIncludeInspector {
-					<div class="flex">
-						@sidebarPageContents(sidebarGroups, current, contents)
-						<div class="h-full pl-2 bg-base-200 ">
-							<datastar-inspector></datastar-inspector>
-						</div>
-					</div>
-				} else {
-					@sidebarPageContents(sidebarGroups, current, contents)
-				}
 			</div>
-			<aside class="drawer-side">
-				<label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-				<ul class="min-h-full px-4 menu w-80 bg-base-300 text-base-content">
-					@SidebarContents(sidebarGroups, current)
-				</ul>
-			</aside>
 		</div>
 	}
 }
 
+// templ SidebarPage(r *http.Request, sidebarGroups []*SidebarGroup, current *SidebarLink, contents string) {
+// 	@Page() {
+// 		@highlightCSS
+// 		<div class="drawer">
+// 			<input id="sidebar-drawer" type="checkbox" class="drawer-toggle"/>
+// 			<div class="flex flex-col min-h-screen drawer-content">
+// 				@header(r)
+// 				@sidebarPageContents(sidebarGroups, current, contents)
+// 			</div>
+// 			<aside class="drawer-side">
+// 				<label for="sidebar-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+// 				<ul class="min-h-full px-4 menu w-80 bg-base-300 text-base-content">
+// 					@SidebarContents(sidebarGroups, current)
+// 				</ul>
+// 			</aside>
+// 		</div>
+// 	}
+// }
 templ sidebarPageContents(sidebarGroups []*SidebarGroup, current *SidebarLink, contents string) {
 	<div class="flex flex-1">
 		<aside class="flex-col hidden gap-4 px-4 py-8 overflow-y-auto lg:flex min-w-64 bg-base-300 lg:visible">

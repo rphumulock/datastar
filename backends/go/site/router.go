@@ -39,25 +39,12 @@ func staticPath(path string) string {
 }
 
 func RunBlocking(port int) toolbelt.CtxErrFunc {
-	upsertIIfeBuildSize()
 	return func(ctx context.Context) error {
-
-		b, err := staticFS.ReadFile("static/library/package.json")
-		if err != nil {
-			return fmt.Errorf("error reading package.json: %w", err)
-		}
-
-		packageJSON, err = UnmarshalPackageJSON(b)
-		if err != nil {
-			return fmt.Errorf("error unmarshaling package.json: %w", err)
-		}
 
 		router := chi.NewRouter()
 
 		router.Use(
-			// middleware.Logger,
 			middleware.Recoverer,
-			// toolbelt.CompressMiddleware(),
 		)
 
 		setupRoutes(ctx, router)
@@ -155,11 +142,8 @@ func setupRoutes(ctx context.Context, router chi.Router) error {
 
 	if err := errors.Join(
 		setupHome(router, sessionStore, ns),
-		setupGuide(router),
-		setupReferenceRoutes(router),
 		setupExamples(ctx, router, sessionStore, ns),
-		setupEssays(router),
-		setupMemes(router),
+		setupGuide(router),
 	); err != nil {
 		return fmt.Errorf("error setting up routes: %w", err)
 	}
