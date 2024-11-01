@@ -1,4 +1,7 @@
 /** @type {import('tailwindcss').Config} */
+
+const { fontFamily } = require('tailwindcss/defaultTheme');
+
 module.exports = {
   content: [
     // '../**/*.md',
@@ -7,46 +10,134 @@ module.exports = {
   ],
   theme: {
     extend: {
-      fontFamily: {
-        sans: ['"Press Start 2P"'],  // Set as default font
-      },
       colors: {
-        background: '#000000',      // Classic black background
-        'primary': '#00FF00',  // Neon green for primary text
-        'secondary': '#FFFFFF',// Bright white for secondary text
-        'accent-1': '#FF0000',      // Red accent color for important buttons
-        'accent-2': '#00BFFF',      // Blue accent for secondary elements
-        'accent-3': '#FFD700',      // Gold for special elements or icons
-        'hover-primary': '#008000', // Darker green for hover states on text
-        'hover-accent-1': '#B22222' // Dark red hover for critical actions
+        background: '#383838',
+        primary: '#00dd00',
+        secondary: '#ffffff',
+        hover: '#ff0000',
+        overlay: 'rgba(16, 16, 16, 0.2)',
       },
-      backgroundColor: {
-        screen: '#111111',          // Dark background screen color for sections
-        'screen-highlight': '#222222', // Lighter dark for containers or headers
+      fontFamily: {
+        sans: ['VT323', ...fontFamily.sans],
       },
-      animation: {
-        blink: 'blink 1s steps(2, start) infinite',
+      fontSize: {
+        'base': '1.4em',
       },
       keyframes: {
-        blink: {
-          '50%': { opacity: '0' },
+        scroll: {
+          '0%': { height: '0' },
+          '100%': { height: '100%' },
         },
+        type: {
+          from: { width: '0' },
+          to: { width: '100%' },
+        },
+        flicker: {
+          '0%': { opacity: '0.15795' },
+          '5%': { opacity: '0.31511' },
+          '10%': { opacity: '0.94554' },
+          // Add all keyframes for the flicker effect
+          '100%': { opacity: '0.54813' },
+        },
+      },
+      animation: {
+        scroll: 'scroll 5s forwards',
+        type: 'type 2s steps(20, end)',
+        flicker: 'flicker 0.3s infinite',
+      },
+      spacing: {
+        'container': '40px',
+      },
+      screens: {
+        'overlay': { max: '600px' },
       },
     },
   },
   plugins: [
-    function ({ addBase }) {
+    function ({ addBase, addUtilities, addComponents }) {
       addBase({
-        'body, body *': {
-          cursor: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221.2rem%22 height=%221.2rem%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22none%22 stroke=%22%2300ff00%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 d=%22M11 21L4 4l17 7l-6.265 2.685a2 2 0 0 0-1.05 1.05z%22/%3E%3C/svg%3E") 14 14, auto',
+        'html, body': {
+          backgroundColor: '#383838',
+          color: '#00dd00',
+          fontSize: '64.5%',
+          fontFamily: '"Press Start 2P", Courier, monospace',
+          height: '100%',
+          margin: '0',
+          padding: '0',
         },
-        'body:hover, body *:hover': {
-          cursor: 'url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221.2rem%22 height=%221.2rem%22 viewBox=%220 0 24 24%22%3E%3Cpath fill=%22%2300ff00%22 fill-rule=%22evenodd%22 d=%22M4.38 3.075a1 1 0 0 0-1.305 1.306l7 17a1 1 0 0 0 1.844.013l2.685-6.265a1 1 0 0 1 .525-.525l6.265-2.685a1 1 0 0 0-.013-1.844z%22 clip-rule=%22evenodd%22/%3E%3C/svg%3E") 12 12, auto',
-        }
+        'h1, h2, h3, h4, h5, h6': {
+          fontWeight: 'normal',
+          margin: '0',
+          textTransform: 'uppercase',
+        },
+        'a': {
+          color: '#ffffff',
+          textDecoration: 'none',
+        },
+        'a:hover': {
+          color: '#ff0000',
+        },
+        'ul': {
+          listStyle: 'none',
+        },
+        'p, span': {
+          lineHeight: '100%',
+          margin: '0',
+        },
+        'span': {
+          animation: 'blink 1s infinite',
+        },
+        '::-webkit-scrollbar': { display: 'none' },
+      });
+
+      addUtilities({
+        '.overlay': {
+          height: '1px',
+          position: 'absolute',
+          width: '1px',
+          top: '0',
+          left: '0',
+        },
+        '.overlay::before': {
+          background:
+            'linear-gradient(#101010 50%, rgba(16, 16, 16, 0.2) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.03))',
+          content: '""',
+          display: 'block',
+          pointerEvents: 'none',
+          position: 'fixed',
+          top: '0',
+          right: '0',
+          bottom: '0',
+          left: '0',
+          zIndex: '2',
+        },
+        '.overlay::after': {
+          animation: 'flicker 0.3s infinite',
+          background: 'rgba(16, 16, 16, 0.2)',
+          content: '""',
+          display: 'block',
+          pointerEvents: 'none',
+          position: 'fixed',
+          top: '0',
+          right: '0',
+          bottom: '0',
+          left: '0',
+          zIndex: '2',
+        },
+        '.scanline': {
+          animation: 'scroll 10s infinite',
+          background:
+            'linear-gradient(to bottom, rgba(0, 221, 0, 0) 0%, rgba(0, 221, 0, 1) 50%, rgba(0, 221, 0, 0) 100%)',
+          display: 'block',
+          height: '20px',
+          opacity: '0.05',
+          position: 'absolute',
+          left: '0',
+          right: '0',
+          top: '-5%',
+          zIndex: '2',
+        },
       });
     },
-    require('@tailwindcss/typography'),
-    require('@tailwindcss/container-queries'),
-    require('tailwind-scrollbar'),
   ],
 }
